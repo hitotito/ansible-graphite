@@ -1,0 +1,38 @@
+---
+- name: Create user
+  user:
+    name: "{{ graphite_user }}"
+    state: present
+
+- name: Create group
+  group:
+    name: "{{ graphite_group }}"
+    state: present
+
+- name: Install required packages
+  apt:
+    name: "{{ item }}"
+    update_cache: yes
+  with_items:
+    - python-pip
+    - python-virtualenv
+    - libcairo2-dev
+    - python-cairo
+    - fontconfig
+    - uwsgi
+    - uwsgi-plugin-python
+    - sudo
+    - libffi-dev
+
+- name: Install cffi
+  pip:
+    name: "cffi==1.10.0"
+  environment:
+    PYTHONPATH: "{{ graphite_lib_dir }}"
+
+- name: Install carbon-cache
+  import_tasks: carbon.yml
+
+- name: Install graphite-web
+  import_tasks: graphite-web.yml
+  when: false

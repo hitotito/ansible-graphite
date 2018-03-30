@@ -1,0 +1,132 @@
+graphite_ver: 1.0.2
+
+graphite_os_systemd_dir: /etc/systemd/system
+graphite_os_pid_dir: /run
+
+graphite_group: graphite
+graphite_user: graphite
+
+graphite_dir: /srv/graphite
+graphite_bin_dir: "{{ graphite_dir }}/bin"
+graphite_conf_dir: "{{ graphite_dir }}/conf"
+graphite_lib_dir: "{{ graphite_dir }}/lib"
+graphite_systemd_dir: "{{ graphite_dir }}/systemd"
+
+graphite_virtualenv: "{{ graphite_dir }}/virtualenv"
+
+graphite_carbon_pip_required:
+  - carbon==1.0.2
+  - txAMQP==0.6.2
+  - whisper==1.0.2
+
+
+# aggregator settings
+graphite_aggregator_carbon_metric_interval: 60
+graphite_aggregator_carbon_metric_prefix: carbon
+graphite_aggregator_destinations: 127.0.0.1:2004
+graphite_aggregator_forward_all: true
+graphite_aggregator_line_receiver_interface: 0.0.0.0
+graphite_aggregator_line_receiver_port: 2023
+graphite_aggregator_log_listener_connections: true
+graphite_aggregator_max_aggregation_intervals: 5
+graphite_aggregator_max_datapoints_per_message: 500
+graphite_aggregator_max_queue_size: 10000
+graphite_aggregator_pickle_receiver_interface: 0.0.0.0
+graphite_aggregator_pickle_receiver_port: 2024
+graphite_aggregator_replication_factor: 1
+graphite_aggregator_use_flow_control: true
+graphite_aggregator_use_whitelist: false
+# graphite_aggregator_user:
+graphite_aggregator_write_back_frequency: 0
+
+
+
+# Carbon cache settings
+graphite_cache_amqp_exchange: graphite
+graphite_cache_amqp_host: localhost
+graphite_cache_amqp_metric_name_in_body: false
+graphite_cache_amqp_password: guest
+graphite_cache_amqp_port: 5672
+graphite_cache_amqp_user: guest
+graphite_cache_amqp_verbose: false
+graphite_cache_amqp_vhost: /
+graphite_cache_bind_patterns: "#"
+graphite_cache_cache_query_interface: 0.0.0.0
+graphite_cache_cache_query_port: 7002
+graphite_cache_cache_write_strategy: sorted
+graphite_cache_carbon_metric_interval: 60
+graphite_cache_carbon_metric_prefix: carbon
+graphite_cache_enable_amqp: false
+graphite_cache_enable_log_rotation: true
+graphite_cache_enable_udp_listener: false
+graphite_cache_line_receiver_interface: 0.0.0.0
+graphite_cache_line_receiver_port: 2003
+graphite_cache_local_data_dir: /opt/graphite/storage/whisper
+graphite_cache_log_cache_hits: false
+graphite_cache_log_cache_queue_sorts: true
+graphite_cache_log_listener_connections: true
+graphite_cache_log_updates: false
+graphite_cache_enable_manhole: false
+graphite_cache_manhole_interface: 127.0.0.1
+graphite_cache_manhole_port: 7222
+graphite_cache_manhole_public_key: ssh-rsa AAAAB3NzaC1y...
+graphite_cache_manhole_user: admin
+graphite_cache_max_cache_size: inf
+graphite_cache_max_creates_per_minute: 50
+graphite_cache_max_updates_per_second: 500
+graphite_cache_max_updates_per_second_on_shutdown: 1000
+graphite_cache_pickle_receiver_interface: 0.0.0.0
+graphite_cache_pickle_receiver_port: 2004
+graphite_cache_udp_receiver_interface: 0.0.0.0
+graphite_cache_udp_receiver_port: 2003
+graphite_cache_use_flow_control: true
+graphite_cache_use_insecure_unpickler: false
+graphite_cache_use_whitelist: false
+# graphite_cache_user:
+graphite_cache_whisper_autoflush: false
+graphite_cache_whisper_fallocate_create: true
+graphite_cache_whisper_lock_writes: false
+graphite_cache_whisper_sparse_create: false
+
+# Storage Schema
+# The default is "60s:1d" (1 day data), this will keep data for 5 years.
+# If you log a lot of data, you may need to restrict this to a shorter time.
+graphite_storage_schemas_default_retentions: "10s:14d,1m:90d,30m:1y,1h:5y"
+graphite_storage_schemas_carbon_retentions: 60:90d
+graphite_storage_schemas_collectd_retentions: 10s:7d,1m:14d,5m:90d,1h:5y
+graphite_storage_schemas: []
+
+
+# Relay settings
+graphite_relay_carbon_metric_interval: 60
+graphite_relay_carbon_metric_prefix: carbon
+graphite_relay_destinations: 127.0.0.1:2004
+graphite_relay_line_receiver_interface: 0.0.0.0
+graphite_relay_line_receiver_port: 2013
+graphite_relay_log_listener_connections: true
+graphite_relay_max_datapoints_per_message: 500
+graphite_relay_max_queue_size: 10000
+graphite_relay_pickle_receiver_interface: 0.0.0.0
+graphite_relay_pickle_receiver_port: 2014
+graphite_relay_relay_method: rules
+graphite_relay_replication_factor: 1
+graphite_relay_use_flow_control: true
+graphite_relay_use_whitelist: false
+# graphite_relay_user:
+
+
+
+#NOTE --- old
+graphite_pip_required:
+  1.0.2:
+    - Django==1.9.13
+    - django-tagging==0.4.3
+    - cairocffi==0.8.0
+    - pytz==2017.2
+    - scandir==1.5
+    - python-memcached==1.47
+    - txAMQP==0.6.2
+    - gunicorn==19.7.0
+    - graphite-web==1.0.2
+    - carbon==1.0.2
+    - whisper==1.0.2

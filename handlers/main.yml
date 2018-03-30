@@ -1,0 +1,10 @@
+- name: enable carbon-cache
+  systemd:
+    name: carbon-cache
+    enabled: yes
+
+- name: restart carbon-cache
+  systemd:
+    name: carbon-cache
+    daemon_reload: yes
+    state: restarted
