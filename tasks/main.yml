@@ -35,4 +35,6 @@
 
 - name: Install graphite-web
   import_tasks: graphite-web.yml
-  when: false
+
+- name: Install nginx
+  import_tasks: nginx.yml

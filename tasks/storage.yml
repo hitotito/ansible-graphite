@@ -1,0 +1,13 @@
+---
+- name: Create storage directory structure
+  file:
+    path: "{{ graphite_storage_dir }}/{{ item }}"
+    state: directory
+    owner: "{{ graphite_user }}"
+    group: "{{ graphite_group }}"
+  with_items:
+    - ceres
+    - lists
+    - rrd
+    - whisper
+#TODO - move current directory created by pip

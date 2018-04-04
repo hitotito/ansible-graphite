@@ -3,16 +3,16 @@ Description=Carbon Cache
 Requires=network-online.target
 
 [Service]
-Environment={{ graphite_systemd_dir }}/carbon-cache.env
+#Environment={{ graphite_carbon_systemd_dir }}/carbon-cache.env
 User=root
 Group=root
 PIDFile={{ graphite_os_pid_dir }}/carbon-cache.pid
 PermissionsStartOnly=true
-ExecStart={{ graphite_virtualenv }}/bin/python {{ graphite_bin_dir }}/carbon-cache.py \
-                --config={{ graphite_conf_dir }}/carbon.conf \
+ExecStart={{ graphite_carbon_virtualenv }}/bin/python {{ graphite_carbon_bin_dir }}/carbon-cache.py \
+                --config={{ graphite_carbon_conf_dir }}/carbon.conf \
                 --pidfile={{ graphite_os_pid_dir }}/carbon-cache.pid \
                 start
-#ExecStart={{ graphite_bin_dir }}/carbon-cache.py --pidfile={{ graphite_os_pid_dir }}/carbon-cache-%i.pid --instance=%i start
+#ExecStart={{ graphite_carbon_bin_dir }}/carbon-cache.py --pidfile={{ graphite_os_pid_dir }}/carbon-cache-%i.pid --instance=%i start
 Type=forking
 ExecReload=/bin/kill -HUP $MAINPID
 KillMode=process

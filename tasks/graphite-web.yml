@@ -1,1 +1,140 @@
 ---
+- name: Create directory structure
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ graphite_user }}"
+    group: "{{ graphite_group }}"
+  with_items:
+    - "{{ graphite_log_web_dir }}"
+    - "{{ graphite_storage_dir }}"
+    - "{{ graphite_web_bin_dir }}"
+    - "{{ graphite_web_conf_dir }}"
+    - "{{ graphite_web_systemd_dir }}"
+    - "{{ graphite_web_webapp_dir }}"
+
+- name: Install Django dependencies
+  pip:
+    name: "{{ item }}"
+    state: present
+    virtualenv: "{{ graphite_web_virtualenv }}"
+  with_items: "{{ graphite_web_pip_required }}"
+  become: true
+  become_user: "{{ graphite_user }}"
+
+- name: Find egg-info directory 
+  stat:
+    path: "{{ graphite_web_webapp_dir }}/graphite_web-{{ graphite_ver }}-py2.7.egg-info"
+  register: _graphite_web_egginfo
+
+- name: Setup graphite-web with pip
+  when: not (_graphite_web_egginfo.stat.exists and _graphite_web_egginfo.stat.isdir)
+  block:
+    - pip:
+        name: "graphite-web=={{ graphite_ver }}"
+        state: present
+        extra_args: >
+          --install-option="--prefix={{ graphite_web_dir }}"
+          --install-option="--install-lib={{ graphite_web_webapp_dir }}"
+          --no-binary=:all:
+
+    - find:
+        paths: "{{ graphite_web_conf_dir }}"
+        patterns: "*.example"
+      register: files_to_delete
+
+    - file:
+        path: "{{ item.path }}"
+        state: absent
+      with_items: "{{ files_to_delete.files }}"
+
+    - file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - "{{ graphite_web_dir }}/examples"
+        - "{{ graphite_web_dir }}/storage"
+
+- name: Install graphite-web local_settings
+  template:
+    src: webapp/local_settings.py.j2
+    dest: "{{ graphite_web_webapp_dir }}/graphite/local_settings.py"
+    owner: "{{ graphite_user }}"
+    group: "{{ graphite_group }}"
+  notify: restart graphite-web
+ 
+- name: Install uwsgi configuration
+  template:
+    src: webapp/wsgi.py.j2
+    dest: "{{ graphite_web_conf_dir }}/wsgi.py"
+    owner: "{{ graphite_user }}"
+    group: "{{ graphite_group }}"
+  notify: restart graphite-web
+
+- name: Install wsgi conf
+  template:
+    src: webapp/graphite-web.ini.j2
+    dest: "{{ graphite_web_conf_dir }}/graphite-web.ini"
+    owner: "{{ graphite_user }}"
+    group: "{{ graphite_group }}"
+  notify: restart graphite-web
+
+- name: Install systemd service
+  template:
+    src: webapp/graphite-web.service.j2
+    dest: "{{ graphite_web_systemd_dir }}/graphite-web.service"
+    owner: "{{ graphite_user }}"
+    group: "{{ graphite_group }}"
+  notify: restart graphite-web
+
+- name: Create Symlink
+  file:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    state: link
+  with_items:
+    - src: "{{ graphite_web_systemd_dir }}/graphite-web.service"
+      dest: "{{ graphite_os_systemd_dir }}/graphite-web.service"
+    - src:  "{{ graphite_web_conf_dir }}"
+      dest: "/etc/graphite-web"
+    - src: "{{ graphite_storage_dir }}"
+      dest: "/var/lib/carbon"
+    - src: "{{ graphite_log_web_dir }}"
+      dest: "/var/log/graphite-web"
+    - src: "{{ graphite_web_webapp_dir }}/graphite/local_settings.py"
+      dest: "{{ graphite_web_conf_dir }}/local_settings.py"
+  notify: restart graphite-web
+
+# NOTE: symlinks must be created before database configuration is performed
+- name: Configure database
+  shell: >
+    {{ graphite_web_virtualenv }}/bin/python {{ graphite_web_virtualenv }}/bin/django-admin.py \
+      migrate \
+      --settings=graphite.settings \
+      --run-syncdb
+  args:
+    chdir: "{{ graphite_web_dir }}"
+    creates: "{{ graphite_storage_dir }}/graphite.db"
+  environment:
+    PYTHONPATH: ./webapp/
+  become: true
+  become_user: "{{ graphite_user }}"
+
+- name: Enable systemd service
+  systemd:
+    name: graphite-web
+    daemon_reload: yes
+    enabled: yes
+
+# - name: Use manage.py to run configuration tasks
+#   include: manage.yml
+#   when: graphite_install_version | version_compare("1.0.2", "<")
+# 
+# - name: Use django-admin.py to run configuration tasks
+#   include: django-admin.yml
+#   when: graphite_install_version | version_compare("1.0.2", ">=")
+# 
+# - name: Remove temp file
+#   file:
+#     path: /tmp/createsuperuser.py
+#     state: absent

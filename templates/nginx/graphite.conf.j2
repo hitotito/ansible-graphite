@@ -1,0 +1,12 @@
+server {
+    listen {{ graphite_web_port }};
+
+    location /static/ {
+        alias {{ graphite_web_webapp_dir }}/content/;
+    }
+
+    location / {
+        include uwsgi_params;
+        uwsgi_pass localhost:{{ graphite_uwsgi_socket_port }};
+    }
+}

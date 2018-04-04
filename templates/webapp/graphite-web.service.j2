@@ -1,0 +1,19 @@
+[Unit]
+Description=Graphite Web
+Requires=network-online.target
+After=network-online.target
+
+[Service]
+User=root
+Group=root
+ExecStart={{ graphite_web_virtualenv }}/bin/uwsgi \
+  --ini {{ graphite_web_conf_dir }}/graphite-web.ini
+
+ExecReload=/bin/kill -HUP $MAINPID
+KillSignal=SIGINT
+Restart=on-failure
+PermissionsStartOnly=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

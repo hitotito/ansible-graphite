@@ -3,27 +3,32 @@
   file:
     path: "{{ item }}"
     state: directory
+    owner: "{{ graphite_user }}"
+    group: "{{ graphite_group }}"
   with_items:
-    - "{{ graphite_bin_dir }}"
-    - "{{ graphite_conf_dir }}"
-    - "{{ graphite_systemd_dir }}"
+    - "{{ graphite_carbon_bin_dir }}"
+    - "{{ graphite_carbon_conf_dir }}"
+    - "{{ graphite_carbon_systemd_dir }}"
+    - "{{ graphite_log_carbon_dir }}"
 
 #TODO - find python version store in host_vars
-- name: Setup graphite with pip
+- name: Setup carbon with pip
   pip:
     name: "{{ item }}"
     extra_args: > 
-      --install-option='--prefix={{ graphite_dir }}'
-      --install-option='--install-lib={{ graphite_virtualenv }}/lib/python2.7/site-packages'
+      --install-option='--prefix={{ graphite_carbon_dir }}'
+      --install-option='--install-lib={{ graphite_carbon_virtualenv }}/lib/python2.7/site-packages'
       --no-binary=:all:
-    virtualenv: "{{ graphite_virtualenv }}"
+    virtualenv: "{{ graphite_carbon_virtualenv }}"
   with_items: "{{ graphite_carbon_pip_required }}"
+  become: true
+  become_user: "{{ graphite_user }}"
   notify: restart carbon-cache
 
 - name: Delete examples
   block:
     - find:
-        paths: "{{ graphite_conf_dir }}"
+        paths: "{{ graphite_carbon_conf_dir }}"
         patterns: "*.example"
       register: files_to_delete
 
@@ -33,25 +38,32 @@
       with_items: "{{ files_to_delete.files }}"
 
     - file:
-        path: "{{ graphite_dir}}/examples"
+        path: "{{ graphite_carbon_dir}}/examples"
         state: absent
+
+- name: Restructure Storage
+  import_tasks: storage.yml
 
 - name: Install carbon configuration
   template:
     src: carbon/carbon.conf.j2
-    dest: "{{ graphite_conf_dir }}/carbon.conf"
+    dest: "{{ graphite_carbon_conf_dir }}/carbon.conf"
+    owner: "{{ graphite_user}}"
+    group: "{{ graphite_group }}"
   notify: restart carbon-cache
 
 - name: Install storage schemas
   template:
     src: carbon/storage-schemas.conf.j2
-    dest: "{{ graphite_conf_dir }}/storage-schemas.conf"
+    dest: "{{ graphite_carbon_conf_dir }}/storage-schemas.conf"
+    owner: "{{ graphite_user}}"
+    group: "{{ graphite_group }}"
   notify: restart carbon-cache
 
 - name: Install carbon-cache systemd service
   template:
     src: carbon/carbon-cache.service.j2
-    dest: "{{ graphite_systemd_dir }}/carbon-cache.service"
+    dest: "{{ graphite_carbon_systemd_dir }}/carbon-cache.service"
     owner: "{{ graphite_user }}"
     group: "{{ graphite_group }}"
   notify: restart carbon-cache
@@ -59,18 +71,28 @@
 - name: Install carbon-cache environment file
   template:
     src: carbon/carbon-cache.env
-    dest: "{{ graphite_systemd_dir }}/carbon-cache.env"
+    dest: "{{ graphite_carbon_systemd_dir }}/carbon-cache.env"
     owner: "{{ graphite_user }}"
     group: "{{ graphite_group }}"
   notify: restart carbon-cache
 
 - name: Create symlink
-  with_items:
-    - { src: "{{ graphite_systemd_dir }}/carbon-cache.service", dest: "{{ graphite_os_systemd_dir }}/carbon-cache.service"}
   file:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
     state: link
-    force: yes
-  notify:
-    - enable carbon-cache
+  with_items:
+    - src: "{{ graphite_carbon_systemd_dir }}/carbon-cache.service"
+      dest: "{{ graphite_os_systemd_dir }}/carbon-cache.service"
+    - src: "{{ graphite_storage_dir }}"
+      dest: "/var/lib/carbon"
+    - src: "{{ graphite_carbon_conf_dir }}"
+      dest: "/etc/carbon"
+    - src: "{{ graphite_log_carbon_dir }}"
+      dest: "/var/log/carbon"
+
+- name: Enable systemd service
+  systemd:
+    name: carbon-cache
+    daemon-reload: yes
+    enabled: yes

@@ -1,24 +1,60 @@
 graphite_ver: 1.0.2
 
+graphite_uwsgi_socket_port: 3031
+uwsgi_graphite_socket: '127.0.0.1:3031'
+
+
 graphite_os_systemd_dir: /etc/systemd/system
-graphite_os_pid_dir: /run
+graphite_os_pid_dir: /var/run
+graphite_os_uwsgi_avail_dir: /etc/uwsgi/apps-available
+graphite_os_uwsgi_enabled_dir: /etc/uwsgi/apps-enabled
 
 graphite_group: graphite
 graphite_user: graphite
 
-graphite_dir: /srv/graphite
-graphite_bin_dir: "{{ graphite_dir }}/bin"
-graphite_conf_dir: "{{ graphite_dir }}/conf"
-graphite_lib_dir: "{{ graphite_dir }}/lib"
-graphite_systemd_dir: "{{ graphite_dir }}/systemd"
+graphite_carbon_dir: /srv/graphite/carbon
+graphite_carbon_bin_dir: "{{ graphite_carbon_dir }}/bin"
+graphite_carbon_conf_dir: "{{ graphite_carbon_dir }}/conf"
+graphite_carbon_systemd_dir: "{{ graphite_carbon_dir }}/systemd"
+graphite_carbon_virtualenv: "{{ graphite_carbon_dir }}/.carbon-ve"
 
-graphite_virtualenv: "{{ graphite_dir }}/virtualenv"
+graphite_log_dir: /srv/graphite/log
+graphite_log_carbon_dir: "{{ graphite_log_dir }}/carbon"
+graphite_log_web_dir: "{{ graphite_log_dir }}/graphite-web"
+
+graphite_storage_dir: /srv/graphite/storage
+
+
+graphite_web_dir: /srv/graphite/graphite-web
+graphite_web_bin_dir: "{{ graphite_web_dir }}/bin"
+graphite_web_conf_dir: "{{ graphite_web_dir }}/conf"
+graphite_web_systemd_dir: "{{ graphite_web_dir }}/systemd"
+graphite_web_webapp_dir: "{{ graphite_web_dir }}/webapp"
+graphite_web_virtualenv: "{{ graphite_web_dir }}/.graphite-web-ve"
+
+graphite_nginx_dir: /srv/graphite/nginx
+graphite_nginx_conf_dir: "{{ graphite_nginx_dir }}/conf"
+
+
 
 graphite_carbon_pip_required:
   - carbon==1.0.2
   - txAMQP==0.6.2
   - whisper==1.0.2
 
+graphite_web_pip_required:
+  - cairocffi==0.8.0
+  - Django==1.9.13
+  - django-tagging==0.4.3
+  - gunicorn==19.7.0
+  - urllib3==1.22
+  - pyparsing==2.2.0
+  - pytz==2017.2
+  - scandir==1.5
+  - python-memcached==1.47
+  - txAMQP==0.6.2
+  - uWSGI==2.0.17
+  - whisper==1.0.2
 
 # aggregator settings
 graphite_aggregator_carbon_metric_interval: 60
@@ -61,7 +97,7 @@ graphite_cache_enable_log_rotation: true
 graphite_cache_enable_udp_listener: false
 graphite_cache_line_receiver_interface: 0.0.0.0
 graphite_cache_line_receiver_port: 2003
-graphite_cache_local_data_dir: /opt/graphite/storage/whisper
+graphite_cache_local_data_dir: "{{ graphite_storage_dir }}/whisper"
 graphite_cache_log_cache_hits: false
 graphite_cache_log_cache_queue_sorts: true
 graphite_cache_log_listener_connections: true
@@ -114,6 +150,10 @@ graphite_relay_use_flow_control: true
 graphite_relay_use_whitelist: false
 # graphite_relay_user:
 
+
+graphite_web_port: 8080
+graphite_web_secret_key: PLEASE_CHANGE_ME
+graphite_web_timezone: UTC
 
 
 #NOTE --- old

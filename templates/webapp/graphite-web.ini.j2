@@ -1,0 +1,7 @@
+[uwsgi]
+processes = 2
+socket = {{ uwsgi_graphite_socket }}
+gid = {{ graphite_group }}
+uid = {{ graphite_user }}
+chdir = {{ graphite_web_conf_dir }}
+module = wsgi:application

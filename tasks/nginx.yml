@@ -1,0 +1,12 @@
+---
+- name: Create directory structure
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - "{{ graphite_nginx_conf_dir }}"
+
+- name: Create nginx config
+  template:
+    src: "nginx/graphite.conf.j2"
+    dest: "{{ graphite_nginx_conf_dir }}/graphite.conf"
